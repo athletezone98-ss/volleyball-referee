@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مساعد حكم كرة الطائرة</title>
+<style>
+:root{
+  --navy:#102b46; --blue:#168bd2; --sky:#eaf6ff; --line:#ffffff;
+  --red:#e45c5c; --green:#16865b; --ink:#17324d; --muted:#63788d;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:Tahoma,Arial,sans-serif;
+  background:linear-gradient(145deg,#f4f9fd,#e7f2fa); color:var(--ink);
+}
+.app{max-width:1050px;margin:0 auto;padding:22px 16px 32px}
+header{text-align:center;margin-bottom:18px}
+h1{margin:0;color:var(--navy);font-size:clamp(24px,4vw,34px)}
+.subtitle{margin:8px 0 0;color:var(--muted);font-size:14px}
+.scoreboard{
+  display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:stretch;direction:ltr;
+  background:#fff;padding:14px;border-radius:20px;box-shadow:0 8px 28px #17324d12;
+}
+.team-score{border-radius:15px;padding:12px;text-align:center;background:#f2f8fd;direction:rtl}
+.team-score.red{background:#fff4f3}
+.team-name{font-weight:700;font-size:17px}
+.score{font-size:clamp(38px,7vw,56px);font-weight:800;line-height:1.2;margin:5px 0;color:var(--navy);font-variant-numeric:tabular-nums}
+.team-score.red .score{color:#b63e3e}
+.add-point{
+  border:0;border-radius:12px;padding:10px 18px;font-size:16px;font-weight:700;
+  color:white;background:var(--blue);cursor:pointer;min-width:132px;
+}
+.team-score.red .add-point{background:var(--red)}
+.add-point:disabled{opacity:.4;cursor:not-allowed}
+.center-info{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:7px;min-width:115px;direction:rtl}
+.serve-pill{font-size:12px;color:var(--green);font-weight:700;background:#e8f7ef;padding:7px 10px;border-radius:30px;text-align:center}
+.status{font-size:12px;color:var(--muted);text-align:center;max-width:130px}
+.start-box{
+  margin:14px 0;background:white;border-radius:16px;padding:13px 16px;
+  display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;
+  box-shadow:0 5px 20px #17324d0b;
+}
+.start-box strong{font-size:14px}
+.team-name-editor{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;width:100%;margin-bottom:4px}
+.team-name-editor label{display:flex;gap:6px;align-items:center;font-size:13px;font-weight:700;color:var(--navy)}
+.team-name-editor input{width:145px;max-width:38vw;padding:8px 10px;border:1px solid #c8d9e7;border-radius:9px;font:inherit;text-align:center}
+.team-name-editor input:disabled{background:#f1f5f8;color:#718096}
+.team-name-editor .name-a{border-right:4px solid var(--blue)}
+.team-name-editor .name-b{border-right:4px solid var(--red)}
+.start-btn{border:1px solid #c8d9e7;background:#f7fbff;color:var(--navy);border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer}
+.start-btn.active{background:var(--navy);color:white;border-color:var(--navy)}
+.start-btn:disabled{opacity:.65;cursor:not-allowed}
+.roster-editor{margin:0 0 14px;background:#fff;border-radius:16px;padding:12px 15px;box-shadow:0 5px 20px #17324d0b}
+.roster-editor summary{cursor:pointer;font-weight:700;color:var(--navy);font-size:14px}
+.roster-help{font-size:12px;color:var(--muted);margin:8px 0 12px;line-height:1.7}
+.roster-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.roster-team{border:1px solid #dce8f1;border-radius:12px;padding:10px;min-width:0}
+.roster-team legend{font-weight:700;font-size:13px;padding:0 5px;color:var(--navy)}
+.roster-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.roster-fields label{font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.roster-fields input{width:100%;min-width:0;border:1px solid #d5e2ec;border-radius:8px;padding:8px 5px;font:inherit;font-size:13px;text-align:center;color:var(--ink);background:#fbfdff}
+.roster-fields input:focus{outline:2px solid #9bd4f5;border-color:var(--blue)}
+.roster-team:disabled{opacity:.65}
+.court-wrap{background:#fff;border-radius:22px;padding:14px;box-shadow:0 8px 28px #17324d12}
+.court-label{text-align:center;font-size:13px;color:var(--muted);margin:0 0 10px}
+.court{
+  position:relative;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;direction:ltr;
+  border:5px solid #fff;border-radius:13px;background:#eaa45e;
+  box-shadow:inset 0 0 0 2px #d58c48;aspect-ratio:2 / 1;min-height:0;
+}
+.half{position:relative;padding:18px 13px;display:flex;flex-direction:column;gap:10px;direction:rtl}
+.half-title{text-align:center;color:#fff;font-weight:800;text-shadow:0 1px 3px #70451f;font-size:16px}
+.positions{
+  flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,minmax(68px,1fr));
+  gap:8px;position:relative;
+}
+.position{
+  background:#fffdf7eF;border:2px solid #fff;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;
+  min-height:65px;box-shadow:0 3px 8px #75451b20;
+}
+.position .num{font-size:11px;color:#718096}
+.position .zone{font-size:9px;color:#8a98a6}
+.position .player{font-size:20px;font-weight:800;color:var(--navy)}
+.position.server{outline:3px solid #21a36d;outline-offset:-5px;background:#edfff5}
+.position.server .num:after{content:" • إرسال";color:var(--green);font-weight:700}
+.net{
+  position:absolute;top:0;bottom:0;left:50%;width:5px;transform:translateX(-50%);
+  background:repeating-linear-gradient(to bottom,#fff 0 7px,#d9e2e9 7px 11px);
+  z-index:3;pointer-events:none;
+}
+.positions{direction:ltr}
+.legend{display:flex;justify-content:center;gap:15px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-top:12px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#21a36d;margin-left:5px}
+.note{margin:13px 3px 0;text-align:center;color:var(--muted);font-size:12px;line-height:1.8}
+.toast{min-height:24px;text-align:center;color:var(--green);font-weight:700;font-size:13px;margin-top:10px}
+@media(max-width:620px){
+ .app{padding:15px 9px 24px}
+ .scoreboard{gap:5px;padding:8px}
+ .team-score{padding:9px 5px}
+ .team-name{font-size:14px}
+ .add-point{min-width:0;width:100%;padding:10px 5px;font-size:14px}
+ .center-info{min-width:82px}
+ .roster-grid{grid-template-columns:1fr}
+ .roster-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .status{font-size:10px}
+ .court{min-height:300px;aspect-ratio:auto}
+ .half{padding:13px 7px;gap:8px}
+ .half-title{font-size:13px}
+ .positions{gap:5px;grid-template-rows:repeat(3,minmax(58px,1fr))}
+ .position{min-height:55px;border-radius:9px}
+ .position .player{font-size:17px}
+ .position .zone{font-size:8px}
+ .position .num{font-size:10px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>مساعد حكم كرة الطائرة</h1>
+    <p class="subtitle">عدّاد النقاط ومتابعة الدوران القانوني في شاشة واحدة</p>
+  </header>
+
+  <section class="scoreboard" aria-label="عداد النقاط">
+    <div class="team-score">
+      <div class="team-name" id="teamLabelA">الفريق الأول</div>
+      <div class="score" id="scoreA">0</div>
+      <button class="add-point" id="pointA" disabled>＋ نقطة للفريق الأول</button>
+    </div>
+    <div class="center-info">
+      <div class="serve-pill" id="serveLabel">لم يُحدّد الإرسال</div>
+      <div class="status" id="status">اختر الفريق الذي يبدأ بالإرسال</div>
+    </div>
+    <div class="team-score red">
+      <div class="team-name" id="teamLabelB">الفريق الثاني</div>
+      <div class="score" id="scoreB">0</div>
+      <button class="add-point" id="pointB" disabled>＋ نقطة للفريق الثاني</button>
+    </div>
+  </section>
+
+  <section class="start-box">
+    <strong>الفريق الذي يبدأ بالإرسال:</strong>
+    <button class="start-btn" id="startA">الفريق الأول</button>
+    <button class="start-btn" id="startB">الفريق الثاني</button>
+  </section>
+
+  <details class="roster-editor">
+    <summary>تعديل أسماء اللاعبين أو أرقام قمصانهم</summary>
+    <p class="roster-help">اختياري: اكتب اسم اللاعب أو رقم قميصه حسب مركزه الحالي. بعد بدء المباراة تُقفل البيانات، وتنتقل أسماء اللاعبين تلقائياً مع الدوران.</p>
+    <div class="roster-grid">
+      <fieldset class="roster-team" id="rosterA">
+        <legend id="rosterLegendA">الفريق الأول</legend>
+        <div class="roster-fields" id="rosterFieldsA"></div>
+      </fieldset>
+      <fieldset class="roster-team" id="rosterB">
+        <legend id="rosterLegendB">الفريق الثاني</legend>
+        <div class="roster-fields" id="rosterFieldsB"></div>
+      </fieldset>
+    </div>
+  </details>
+
+  <section class="court-wrap">
+    <p class="court-label">ملعب المباراة — المراكز الستة لكل فريق</p>
+    <div class="court">
+      <div class="half a">
+        <div class="half-title" id="courtLabelA">الفريق الأول</div>
+        <div class="positions" id="positionsA"></div>
+      </div>
+      <div class="half b">
+        <div class="half-title" id="courtLabelB">الفريق الثاني</div>
+        <div class="positions" id="positionsB"></div>
+      </div>
+      <div class="net" aria-hidden="true"></div>
+    </div>
+    <div class="legend"><span><i class="dot"></i> اللاعب صاحب الإرسال</span><span>الأرقام داخل الملعب هي أرقام المراكز</span></div>
+    <div class="toast" id="toast" aria-live="polite"></div>
+    <p class="note">تُضاف النقطة للفريق الذي فاز بالتبادل. إذا كان الفريق المستقبل هو الفائز، ينتقل إليه الإرسال ويدور لاعبوه مركزاً واحداً باتجاه عقارب الساعة.</p>
+  </section>
+</div>
+
+<script>
+const teams = {
+  A: { name: "الفريق الأول", players: {1:"1",2:"2",3:"3",4:"4",5:"5",6:"6"}, score: 0 },
+  B: { name: "الفريق الثاني", players: {1:"1",2:"2",3:"3",4:"4",5:"5",6:"6"}, score: 0 }
+};
+let serving = null;
+let matchStarted = false;
+
+// الدوران القانوني مع عقارب الساعة: 2 إلى 1، 1 إلى 6، 6 إلى 5،
+// 5 إلى 4، 4 إلى 3، و3 إلى 2.
+const clockwise = players => ({
+  1: players[2],
+  2: players[3],
+  3: players[4],
+  4: players[5],
+  5: players[6],
+  6: players[1]
+});
+
+function renderRosterInputs() {
+  ["A", "B"].forEach(key => {
+    const container = document.getElementById("rosterFields" + key);
+    container.innerHTML = "";
+    for (let pos = 1; pos <= 6; pos++) {
+      const label = document.createElement("label");
+      label.textContent = "مركز " + pos;
+      const input = document.createElement("input");
+      input.type = "text";
+      input.maxLength = 14;
+      input.id = "player" + key + pos;
+      input.value = teams[key].players[pos];
+      input.placeholder = "اسم أو رقم";
+      input.setAttribute("aria-label", "لاعب الفريق " + teams[key].name + " في المركز " + pos);
+      input.disabled = matchStarted;
+      input.addEventListener("input", () => {
+        teams[key].players[pos] = input.value.trim() || "—";
+        renderTeam(key);
+      });
+      label.appendChild(input);
+      container.appendChild(label);
+    }
+    document.getElementById("roster" + key).disabled = matchStarted;
+  });
+}
+
+function renderTeam(key) {
+  const team = teams[key];
+  const container = document.getElementById("positions" + key);
+  // كل نصف مواجه للشبكة: الأمامي بمحاذاة الشبكة والخلفي بعيداً عنها.
+  const order = key === "A" ? [5,4,6,3,1,2] : [2,1,3,6,4,5];
+  container.innerHTML = "";
+  order.forEach(pos => {
+    const cell = document.createElement("div");
+    cell.className = "position" + (serving === key && pos === 1 ? " server" : "");
+    const number = document.createElement("span");
+    number.className = "num";
+    number.textContent = "مركز " + pos;
+    const zone = document.createElement("span");
+    zone.className = "zone";
+    zone.textContent = [2, 3, 4].includes(pos) ? "الصف الأمامي" : "الصف الخلفي";
+    const player = document.createElement("span");
+    player.className = "player";
+    player.textContent = team.players[pos];
+    cell.append(number, zone, player);
+    container.appendChild(cell);
+  });
+}
+
+function render() {
+  document.getElementById("scoreA").textContent = teams.A.score;
+  document.getElementById("scoreB").textContent = teams.B.score;
+  document.getElementById("pointA").disabled = serving === null;
+  document.getElementById("pointB").disabled = serving === null;
+  document.getElementById("serveLabel").textContent = serving ? "الإرسال: " + teams[serving].name : "لم يُحدّد الإرسال";
+  document.getElementById("status").textContent = serving ? "اضغط على الفريق الفائز بالتبادل" : "اختر الفريق الذي يبدأ بالإرسال";
+  document.getElementById("startA").classList.toggle("active", serving === "A");
+  document.getElementById("startB").classList.toggle("active", serving === "B");
+  document.getElementById("startA").disabled = matchStarted;
+  document.getElementById("startB").disabled = matchStarted;
+  renderTeam("A");
+  renderTeam("B");
+}
+
+function awardPoint(winner) {
+  if (!serving || !matchStarted) return;
+  teams[winner].score += 1;
+  const toast = document.getElementById("toast");
+  if (winner !== serving) {
+    teams[winner].players = clockwise(teams[winner].players);
+    serving = winner;
+    toast.textContent = "نقطة للفريق " + teams[winner].name + " — انتقل الإرسال ونُفّذ الدوران القانوني.";
+    renderRosterInputs();
+  } else {
+    toast.textContent = "نقطة للفريق " + teams[winner].name + " — يستمر بالإرسال دون دوران.";
+  }
+  render();
+}
+
+function chooseFirstServer(teamKey) {
+  if (matchStarted) return;
+  serving = teamKey;
+  matchStarted = true;
+  document.getElementById("toast").textContent = "الفريق " + teams[teamKey].name + " يبدأ بالإرسال من المركز 1.";
+  renderRosterInputs();
+  render();
+}
+
+["A", "B"].forEach(key => {
+  document.getElementById("teamName" + key).addEventListener("input", event => {
+    if (matchStarted) return;
+    teams[key].name = event.target.value.trim() || (key === "A" ? "الفريق الأول" : "الفريق الثاني");
+    render();
+  });
+});
+document.getElementById("startA").addEventListener("click", () => chooseFirstServer("A"));
+document.getElementById("startB").addEventListener("click", () => chooseFirstServer("B"));
+document.getElementById("pointA").addEventListener("click", () => awardPoint("A"));
+document.getElementById("pointB").addEventListener("click", () => awardPoint("B"));
+renderRosterInputs();
+render();
+</script>
+</body>
+</html>
