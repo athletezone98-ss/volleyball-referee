@@ -34,6 +34,7 @@ button{
  background:#1766a0;color:white
 }
 .point{background:#13834b}
+.minus{background:#c0392b}
 .serve{background:#e8a52b;color:#222}
 .court{
  background:#d99a54;border:5px solid white;
@@ -93,6 +94,7 @@ grid-template-areas:
   <input id="nameA" value="الفريق الأول">
   <div class="score" id="scoreA">0</div>
   <button class="point" onclick="addPoint('A')">+ نقطة للفريق</button>
+  <button class="minus" onclick="undoPoint('A')">− تراجع</button>
   <button class="serve" onclick="setServe('A')">يبدأ بالإرسال</button>
  </div>
 
@@ -100,6 +102,7 @@ grid-template-areas:
   <input id="nameB" value="الفريق الثاني">
   <div class="score" id="scoreB">0</div>
   <button class="point" onclick="addPoint('B')">+ نقطة للفريق</button>
+  <button class="minus" onclick="undoPoint('B')">− تراجع</button>
   <button class="serve" onclick="setServe('B')">يبدأ بالإرسال</button>
  </div>
 </div>
@@ -115,22 +118,22 @@ grid-template-areas:
 <div class="players">
 <div class="player p1"><small>1 - </small><input id="A1" value="اللاعب "></div>
 <div class="player p2"><small>2 - </small><input id="A2" value="اللاعب "></div>
-<div class="player p3"><small>3 -  </small><input id="A3" value="اللاعب "></div>
-<div class="player p4"><small>4 -  </small><input id="A4" value="اللاعب "></div>
-<div class="player p5"><small>5 -  </small><input id="A5" value="اللاعب "></div>
-<div class="player p6"><small>6 -  </small><input id="A6" value="اللاعب "></div>
+<div class="player p3"><small>3 - </small><input id="A3" value="اللاعب "></div>
+<div class="player p4"><small>4 - </small><input id="A4" value="اللاعب "></div>
+<div class="player p5"><small>5 - </small><input id="A5" value="اللاعب "></div>
+<div class="player p6"><small>6 - </small><input id="A6" value="اللاعب "></div>
 </div>
 </div>
 
 <div class="side">
 <h3 id="courtNameB">الفريق الثاني</h3>
 <div class="players">
-<div class="player p1"><small>1 -  </small><input id="B1" value="اللاعب "></div>
-<div class="player p2"><small>2 -  </small><input id="B2" value="اللاعب "></div>
-<div class="player p3"><small>3 -  </small><input id="B3" value="اللاعب "></div>
-<div class="player p4"><small>4 -  </small><input id="B4" value="اللاعب "></div>
-<div class="player p5"><small>5 -  </small><input id="B5" value="اللاعب "></div>
-<div class="player p6"><small>6 -  </small><input id="B6" value="اللاعب "></div>
+<div class="player p1"><small>1 - </small><input id="B1" value="اللاعب "></div>
+<div class="player p2"><small>2 - </small><input id="B2" value="اللاعب "></div>
+<div class="player p3"><small>3 - </small><input id="B3" value="اللاعب "></div>
+<div class="player p4"><small>4 - </small><input id="B4" value="اللاعب "></div>
+<div class="player p5"><small>5 - </small><input id="B5" value="اللاعب "></div>
+<div class="player p6"><small>6 - </small><input id="B6" value="اللاعب "></div>
 </div>
 </div>
 
@@ -145,6 +148,7 @@ grid-template-areas:
 <script>
 let scores={A:0,B:0};
 let serving='A';
+let history=[];
 
 function teamName(t){
  return document.getElementById('name'+t).value || 'الفريق '+t;
@@ -174,7 +178,29 @@ function rotate(t){
  }
 }
 
+// حفظ الحالة قبل تسجيل النقطة
+function saveState(winner){
+ let players={A:[],B:[]};
+
+ ['A','B'].forEach(t=>{
+  for(let i=1;i<=6;i++){
+   players[t].push(
+    document.getElementById(t+i).value
+   );
+  }
+ });
+
+ history.push({
+  scores:{...scores},
+  serving:serving,
+  players:players,
+  winner:winner
+ });
+}
+
 function addPoint(winner){
+ saveState(winner);
+
  scores[winner]++;
 
  if(winner!==serving){
@@ -185,10 +211,42 @@ function addPoint(winner){
  update();
 }
 
+// التراجع عن آخر نقطة مع استعادة الإرسال والدوران
+function undoPoint(team){
+ if(history.length===0){
+  alert('لا توجد نقاط سابقة للتراجع عنها');
+  return;
+ }
+
+ let last=history[history.length-1];
+
+ if(last.winner!==team){
+  alert('يجب التراجع عن آخر نقطة مسجلة أولاً');
+  return;
+ }
+
+ let previous=history.pop();
+
+ scores={...previous.scores};
+ serving=previous.serving;
+
+ ['A','B'].forEach(t=>{
+  for(let i=1;i<=6;i++){
+   document.getElementById(t+i).value=
+    previous.players[t][i-1];
+  }
+ });
+
+ update();
+}
+
 function resetGame(){
  if(!confirm('هل تريد إعادة المباراة؟'))return;
+
  scores={A:0,B:0};
  serving='A';
+ history=[];
+
  update();
 }
 
